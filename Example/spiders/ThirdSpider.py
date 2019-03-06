@@ -1,12 +1,25 @@
 import scrapy
-
-
+import json
 
 class ThirdSpider(scrapy.Spider):
     name = "ThirdSpider"
+
+    data = {}
+    data['Songs'] = []
+
     start_urls = [
         'https://www.lyrics.com//genre/Pop',
     ]
+
+    def writeToJson(self, lyrics, songName, songArtist):
+        self.data['Songs'].append({  
+            'Title': songName,
+            'Artist': songArtist,
+            'Lyrics': lyrics
+        })
+
+        with open('songs.json', 'w') as outfile:  
+            json.dump(self.data, outfile)
 
     def parse(self, response):
         for test in response.css('div.sec-lyric'):
@@ -31,14 +44,6 @@ class ThirdSpider(scrapy.Spider):
         song_name = response.css("h1.lyric-title ::text").get()
         artist_name = response.css("h3.lyric-artist a ::text").get()
 
-        file = open("F:\\SE Project\\Scraping\\Example\\Example\\spiders\\Songs\\" + song_name+ "_" + artist_name +".txt", "w")
         lyrics = response.css("pre.lyric-body ::text").extract()
-        
-        file.write("Song\n")
-        file.write(song_name+"\n")
-        file.write("Artist\n")
-        file.write(artist_name+"\n\n\n")
 
-        for word in lyrics:
-            file.write(word)
-        file.close()
+        self.writeToJson(lyrics, song_name, artist_name)
